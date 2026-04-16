@@ -4,6 +4,8 @@ uniform float halfBoxHeight;
 uniform float halfBoxDepth;
 uniform vec3 centerPoint;
 uniform float time;
+uniform float streakCount;
+uniform float speed;
 
 float toSinRange(float nr)
 {
@@ -18,8 +20,6 @@ float rand(inout vec2 seed) {
     return toSinRange(fract((p3.x + p3.y) * p3.z));
 }
 
-uniform float streakCount;
-uniform float speed;
 out vec2 vUv;
 out float instanceId;
 vec3 getInstancePosition(int instanceNumber)

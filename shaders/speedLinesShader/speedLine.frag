@@ -1,22 +1,21 @@
-#version 300 es
-precision highp float;
 
-uniform vec2 u_resolution;
-uniform float u_time;
+uniform vec2 resolution;
+uniform float time;
 
 out vec4 outColor;
 
 
 
-float radialScale = 5.0;
-float lengthScale = 200.0;
-float speedLineAnimation = 2.0;
-float speedLinePower = 2.0;
-float speedLineMap = .4;
+uniform float radialScale ;
+uniform float lengthScale ;
+uniform float speedLineAnimation ;
+uniform float speedLinePower ;
+uniform float speedLineMap ;
 
-float maskScale = 3.0;
-float maskHardness = 1.2;
-float maskPower = 5.0;
+uniform float maskScale ;
+uniform float maskHardness ;
+uniform float maskPower ;
+uniform vec2 center;
 
 void Saturate(inout vec4 Out)
 {
@@ -27,7 +26,7 @@ void Saturate(inout vec4 Out)
 
 float RadialMask(vec2 uv, float scale, float hardness)
 {
-    vec2 center = vec2(0.5, 0.5);
+    // vec2 center = vec2(0.5, 0.5);
     float dist = distance(uv, center) * scale;
     float mask = 1.0 - smoothstep(1.0 - hardness, 1.0, dist);
     return clamp(mask, 0.0, 1.0);
@@ -108,7 +107,7 @@ float simpleNoise(vec2 seed, float scale)
 
 vec2 UV()
 {
-    return gl_FragCoord.xy / u_resolution.xy;
+    return gl_FragCoord.xy / resolution.xy;
 }
 
 
@@ -121,7 +120,7 @@ vec4 InverseLerp(vec4 A, vec4 B, vec4 T)
 vec2 speedLines(float speedLineAnimation)
 {
     return vec2(
-        (-speedLineAnimation) * u_time,
+        (-speedLineAnimation) * time *0.001,
         0.0
     );
 }
@@ -146,3 +145,16 @@ void main() {
     outColor = vec4(polar.x, polar.y, 1.0, 1.0);
     outColor = color;
 }
+
+// uniform vec2 resolution;
+
+// out vec4 outColor;
+// void main() {
+//         vec2 uv = gl_FragCoord.xy / resolution;
+
+//     // if (uv.x>0.0) {
+//     //     discard;
+//     // }
+
+//     outColor = vec4(uv,1.0, .5);
+// }

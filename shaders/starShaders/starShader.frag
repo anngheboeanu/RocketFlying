@@ -21,7 +21,7 @@ void main() {
 
     vec2 seed = vec2(instanceId);
     vec3 color = vec3(1.0, 1.0, 1.0);
-    color = vec3(rand(seed),rand(seed),rand(seed))  ;
+    // color = vec3(rand(seed),rand(seed),rand(seed))  ;
     opacity*=2.0;
     
     outColor = vec4(color, opacity) ;

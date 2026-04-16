@@ -10,14 +10,16 @@ export const starMaterialUniforms = {
             centerPoint: {value: new THREE.Vector3(0,0,-400)},
             time:   {value: 0.0},
             speed:{value:.1},
-            streakCount:{value:1000}
+            streakCount:{value:1},
+            totalcount:{value:10000}
 }
+
 
 export function StarBackgroundMesh(size=1, count = 10000.0, center = new  THREE.Vector3(0,0,0), halfWidth = 100, halfHeight = 100, halfDepth = 100)
 {
     const planeGeometry = new THREE.PlaneGeometry(size, size);
     
-
+    starMaterialUniforms.totalcount.value = count;
     starMaterialUniforms.centerPoint.value.copy( center );
     starMaterialUniforms.halfBoxDepth.value = halfDepth;
     starMaterialUniforms.halfBoxHeight.value = halfHeight;
