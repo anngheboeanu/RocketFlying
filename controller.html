@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rocket Phone Controller</title>
+    <style>
+      :root {
+        --bg-1: #020610;
+        --bg-2: #0a1730;
+        --panel: rgba(7, 18, 32, 0.84);
+        --panel-edge: rgba(125, 211, 252, 0.28);
+        --text: #ecf6ff;
+        --muted: rgba(220, 234, 255, 0.72);
+        --accent: #82e4ff;
+        --accent-2: #ffd36e;
+        --accent-3: #78ffb1;
+        --warning: #ff8e7a;
+        --pitch-offset: 0px;
+        --roll-angle: 0deg;
+        --wheel-angle: 0deg;
+        --thrust-level: 0.5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(52, 109, 186, 0.34), transparent 42%),
+          radial-gradient(circle at 15% 20%, rgba(130, 228, 255, 0.12), transparent 28%),
+          linear-gradient(180deg, #0e1e38 0%, #071120 44%, #03070d 100%);
+        color: var(--text);
+        font-family: "Bahnschrift", "Trebuchet MS", "Segoe UI", sans-serif;
+        display: grid;
+        place-items: start center;
+        padding: 24px 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: auto;
+        border-radius: 999px;
+        pointer-events: none;
+        filter: blur(80px);
+      }
+
+      body::before {
+        width: 220px;
+        height: 220px;
+        right: -40px;
+        top: 8%;
+        background: rgba(130, 228, 255, 0.15);
+      }
+
+      body::after {
+        width: 240px;
+        height: 240px;
+        left: -80px;
+        bottom: 14%;
+        background: rgba(255, 211, 110, 0.12);
+      }
+
+      .cockpit-shell {
+        width: min(94vw, 560px);
+        position: relative;
+      }
+
+      .cockpit-shell::before {
+        content: "";
+        position: absolute;
+        inset: -18px 12px auto;
+        height: 84px;
+        border-radius: 36px 36px 0 0;
+        background: linear-gradient(180deg, rgba(160, 212, 255, 0.12), rgba(255, 255, 255, 0));
+        border: 1px solid rgba(153, 203, 255, 0.15);
+        pointer-events: none;
+      }
+
+      .cockpit {
+        position: relative;
+        border-radius: 28px;
+        border: 1px solid var(--panel-edge);
+        padding: 22px;
+        background:
+          linear-gradient(180deg, rgba(15, 32, 54, 0.92), rgba(5, 14, 24, 0.96)),
+          var(--panel);
+        box-shadow:
+          0 28px 80px rgba(0, 0, 0, 0.52),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          inset 0 -20px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+      }
+
+      .cockpit::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, transparent 0, rgba(130, 228, 255, 0.05) 49%, transparent 51%, transparent 100%),
+          linear-gradient(0deg, transparent 0, rgba(130, 228, 255, 0.04) 49%, transparent 51%, transparent 100%);
+        background-size: 100% 100%, 100% 22px;
+        pointer-events: none;
+        opacity: 0.45;
+      }
+
+      .hud-top {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        font-size: 0.72rem;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 7vw, 3rem);
+        line-height: 0.95;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .room-pill {
+        flex: 0 0 auto;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(130, 228, 255, 0.25);
+        background: rgba(130, 228, 255, 0.08);
+        color: var(--text);
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .status {
+        position: relative;
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(124, 198, 255, 0.18);
+        background: rgba(5, 12, 22, 0.56);
+        color: #d7ebff;
+        font-size: 0.94rem;
+        line-height: 1.45;
+      }
+
+      .instrument-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.15fr 0.92fr;
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .instrument {
+        position: relative;
+        min-height: 164px;
+        padding: 12px;
+        border-radius: 18px;
+        border: 1px solid rgba(142, 200, 255, 0.15);
+        background: linear-gradient(180deg, rgba(8, 18, 31, 0.88), rgba(4, 10, 18, 0.88));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      .instrument-label {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 0.68rem;
+        margin-bottom: 10px;
+      }
+
+      .horizon-window {
+        position: relative;
+        overflow: hidden;
+        border-radius: 999px;
+        aspect-ratio: 1;
+        border: 1px solid rgba(151, 214, 255, 0.22);
+        background: #020610;
+      }
+
+      .horizon-band {
+        position: absolute;
+        inset: -40%;
+        transform: translateY(var(--pitch-offset)) rotate(var(--roll-angle));
+        transition: transform 80ms linear;
+        background:
+          linear-gradient(180deg, #83d7ff 0 48%, #ecd4a0 48% 52%, #3c2714 52% 100%);
+      }
+
+      .horizon-lines {
+        position: absolute;
+        inset: 16% 20%;
+        pointer-events: none;
+      }
+
+      .horizon-lines::before,
+      .horizon-lines::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.75);
+      }
+
+      .horizon-lines::before { top: 32%; }
+      .horizon-lines::after { bottom: 32%; }
+
+      .horizon-reticle {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+      }
+
+      .horizon-reticle::before,
+      .horizon-reticle::after {
+        content: "";
+        position: absolute;
+        background: var(--accent-2);
+      }
+
+      .horizon-reticle::before {
+        width: 52%;
+        height: 3px;
+      }
+
+      .horizon-reticle::after {
+        width: 3px;
+        height: 22%;
+      }
+
+      .helm-wrap {
+        display: grid;
+        place-items: center;
+        height: calc(100% - 20px);
+      }
+
+      .helm {
+        position: relative;
+        width: min(100%, 220px);
+        aspect-ratio: 1;
+        transform: rotate(var(--wheel-angle));
+        transition: transform 80ms linear;
+      }
+
+      .helm-ring,
+      .helm-ring::before,
+      .helm-ring::after {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+      }
+
+      .helm-ring {
+        border: 16px solid rgba(142, 228, 255, 0.16);
+        box-shadow:
+          0 0 0 1px rgba(130, 228, 255, 0.14),
+          inset 0 0 24px rgba(130, 228, 255, 0.08);
+      }
+
+      .helm-ring::before {
+        content: "";
+        inset: 14px;
+        border: 2px dashed rgba(255, 211, 110, 0.28);
+      }
+
+      .helm-ring::after {
+        content: "";
+        inset: 50% auto auto 50%;
+        width: 16px;
+        height: 16px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: var(--accent-2);
+        box-shadow: 0 0 18px rgba(255, 211, 110, 0.4);
+      }
+
+      .helm-spoke {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 12px;
+        height: 42%;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(130, 228, 255, 0.8), rgba(130, 228, 255, 0.15));
+        transform-origin: center 0;
+      }
+
+      .helm-spoke.a { transform: translate(-50%, -100%) rotate(0deg); }
+      .helm-spoke.b { transform: translate(-50%, -100%) rotate(120deg); }
+      .helm-spoke.c { transform: translate(-50%, -100%) rotate(240deg); }
+
+      .helm-hub {
+        position: absolute;
+        inset: 34%;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.24), rgba(16,35,59,0.9));
+        border: 1px solid rgba(130, 228, 255, 0.28);
+        box-shadow: inset 0 0 16px rgba(130, 228, 255, 0.08);
+      }
+
+      .helm-core {
+        position: absolute;
+        inset: 43%;
+        border-radius: 50%;
+        background: var(--accent-2);
+        box-shadow: 0 0 18px rgba(255, 211, 110, 0.5);
+      }
+
+      .telemetry-stack {
+        display: grid;
+        gap: 10px;
+        height: calc(100% - 20px);
+      }
+
+      .metric-card {
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(125, 211, 252, 0.1);
+      }
+
+      .metric-label {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 0.62rem;
+      }
+
+      .metric-value {
+        margin-top: 6px;
+        font-size: 1.2rem;
+        letter-spacing: 0.06em;
+      }
+
+      .bar-track {
+        margin-top: 10px;
+        height: 10px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .bar-fill {
+        width: calc(var(--bar-level, 0.5) * 100%);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        transition: width 80ms linear;
+      }
+
+      .telemetry {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(125, 211, 252, 0.1);
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .controls-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        flex: 1 1 150px;
+        border: 0;
+        border-radius: 16px;
+        padding: 14px 16px;
+        font-size: 0.92rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #04121d;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+        cursor: pointer;
+      }
+
+      button:last-child {
+        background: linear-gradient(135deg, var(--accent-3), var(--accent));
+      }
+
+      .small {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 0.85rem;
+        line-height: 1.45;
+      }
+
+      @media (max-width: 520px) {
+        .cockpit {
+          padding: 18px;
+          border-radius: 22px;
+        }
+
+        .instrument-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .instrument {
+          min-height: 0;
+        }
+
+        .helm {
+          width: min(70vw, 220px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cockpit-shell">
+      <main class="cockpit">
+        <section class="hud-top">
+          <div>
+            <p class="eyebrow">Flight Deck Link</p>
+            <h1>Helm Sync</h1>
+          </div>
+          <div id="roomBadge" class="room-pill">Room</div>
+        </section>
+
+        <div id="status" class="status">Connecting...</div>
+
+        <section class="instrument-grid">
+          <article class="instrument">
+            <div class="instrument-label">Attitude</div>
+            <div class="horizon-window">
+              <div id="horizonBand" class="horizon-band"></div>
+              <div class="horizon-lines"></div>
+              <div class="horizon-reticle"></div>
+            </div>
+          </article>
+
+          <article class="instrument">
+            <div class="instrument-label">Steering Wheel</div>
+            <div class="helm-wrap">
+              <div id="helmWheel" class="helm">
+                <div class="helm-ring"></div>
+                <div class="helm-spoke a"></div>
+                <div class="helm-spoke b"></div>
+                <div class="helm-spoke c"></div>
+                <div class="helm-hub"></div>
+                <div class="helm-core"></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="instrument">
+            <div class="instrument-label">Flight Output</div>
+            <div class="telemetry-stack">
+              <div class="metric-card">
+                <div class="metric-label">Pitch</div>
+                <div id="pitchValue" class="metric-value">0.00</div>
+                <div class="bar-track">
+                  <div id="pitchBar" class="bar-fill"></div>
+                </div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Roll</div>
+                <div id="rollValue" class="metric-value">0.00</div>
+                <div class="bar-track">
+                  <div id="rollBar" class="bar-fill"></div>
+                </div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Sync Source</div>
+                <div id="sourceValue" class="metric-value">pending</div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <div class="controls-row">
+          <button id="startBtn" type="button">Enable Motion</button>
+          <button id="calibrateBtn" type="button">Recalibrate</button>
+        </div>
+
+        <div id="telemetry" class="telemetry">pitch: 0.00 | roll: 0.00</div>
+        <div class="small">Hold the phone like a ship yoke. Recalibrate when your neutral hand position changes, then steer with small, deliberate tilts.</div>
+      </main>
+    </div>
+    <script type="module" src="/src/controller.js"></script>
+  </body>
+</html>
