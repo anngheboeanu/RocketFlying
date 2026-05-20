@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 
 const directionalLight_1 = {
-    position: [0, 10, -5] ,
+    position: [0, 0, -1] ,
     color: 0xffffff,
-    intensity: 5.5
+    intensity: 10.5
 };
 
 function GetDirectionalThreeJsLight(light) {

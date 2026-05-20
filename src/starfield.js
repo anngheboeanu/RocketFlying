@@ -10,8 +10,10 @@ export const starMaterialUniforms = {
             centerPoint: {value: new THREE.Vector3(0,0,-400)},
             time:   {value: 0.0},
             speed:{value:.1},
+            tScene: { value: null },
             streakCount:{value:1},
-            totalcount:{value:10000}
+            totalcount:{value:10000},
+            resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight)  }
 }
 
 
@@ -32,6 +34,11 @@ export function StarBackgroundMesh(size=1, count = 10000.0, center = new  THREE.
         glslVersion: THREE.GLSL3,
             transparent: true,
         });
+    
+    
+    starMaterial.depthWrite = false;
+    starMaterial.depthTest = true;
+    starMaterial.blending = THREE.AdditiveBlending;
     starMaterial.side = THREE.DoubleSide;
 
     const stars = new THREE.InstancedMesh(planeGeometry, starMaterial, count);   

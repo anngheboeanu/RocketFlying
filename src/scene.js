@@ -5,6 +5,7 @@ import { SetupCamera } from './camera';
 import { GetLights } from './light';
 import { lights } from 'three/src/nodes/lighting/LightsNode.js';
 import { SpeedLineMesh, speedLineUniforms } from './speedLines';
+import { SunUniforms, SunMesh} from './sun';
 
 
 export let starMesh, ship;
@@ -40,6 +41,11 @@ function AddShip(scene)
   ship = new THREE.Group();
   ship.add( rightWing,leftWing,  mainBodyGroup);
   ship.position.set(0,0,0);
+  
+
+
+  ship.renderOrder = -1;
+  
   scene.add(ship);
 }
 
@@ -90,19 +96,30 @@ export function RefreshStarBackground(newCount)
   scene.add(starMesh);
 }
 
+export const renderTarget = new THREE.WebGLRenderTarget(
+  window.innerWidth,
+  window.innerHeight
+);
+export const renderTargetStars = new THREE.WebGLRenderTarget(
+  window.innerWidth,
+  window.innerHeight
+);
+
+
 export function CreateScene()
 {
- scene = new THREE.Scene();
+  scene = new THREE.Scene();
   camera = SetupCamera();
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(innerWidth, innerHeight);
 
   document.body.appendChild(renderer.domElement);
+    
+  const sunMesh = SunMesh();
+  scene.add(sunMesh);
+  sunMesh.layers.set(1);
   
-  const speedLines = SpeedLineMesh();
-  scene.add(speedLines);
-
   let lights = GetLights();
   console.log(lights);
   for(let i=0;i<lights.length;i++)
@@ -110,6 +127,9 @@ export function CreateScene()
     scene.add(lights[i]);
   }
   
+  const ambient = new THREE.AmbientLight(0xffffff, 30.5);
+  scene.add(ambient);
+
   starMesh = StarBackgroundMesh(1., 1000000, new  THREE.Vector3(0,0,100), 150, 100, 200);
   scene.add(starMesh);
 
@@ -117,5 +137,9 @@ export function CreateScene()
   AddShip(scene);
   ChangedShipPos();
 
+  const speedLines = SpeedLineMesh();
+  scene.add(speedLines);
+  speedLines.layers.set(1)
+  
   return {scene,camera, renderer}
 }

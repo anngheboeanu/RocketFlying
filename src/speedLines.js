@@ -23,9 +23,9 @@ export function SpeedLineMesh()
   const geometry = new THREE.BufferGeometry();
 
   const vertices = new Float32Array([
-    -1, -1, 0,
-     3, -1, 0,
-    -1,  3, 0
+    -100, -100, 0,
+     300, -100, 0,
+    -100,  300, 0
   ]);
   geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
 
@@ -40,7 +40,6 @@ export function SpeedLineMesh()
             });
 
   const mesh = new THREE.Mesh(geometry, material);
-  mesh.frustumCulled = false;
 
   return mesh;
 }

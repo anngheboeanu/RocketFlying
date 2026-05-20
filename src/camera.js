@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const camera = {
-    position: new THREE.Vector3(0, 40, -40),
+    position: new THREE.Vector3(0, 10, -40),
     lookAt: new THREE.Vector3(0, 0, 40),
     fov: 60,
     near:0.1,
