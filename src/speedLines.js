@@ -15,7 +15,12 @@ export const speedLineUniforms =
     maskPower : { value: 5.0},
     resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
     time: { value: 0 },
-    center: {value:new THREE.Vector2(0.5, 0.5)}
+    center: {value:new THREE.Vector2(0.5, 0.5)},
+
+    startTime: { value: 0 },
+    blackHole:{value:false},
+    hyper:{value:false},
+    duration:{value:10.0},
 }
 export function SpeedLineMesh()
 {
@@ -42,4 +47,52 @@ export function SpeedLineMesh()
   const mesh = new THREE.Mesh(geometry, material);
 
   return mesh;
+}
+
+
+export function SetNormalValues()
+{
+  speedLineUniforms.radialScale.value = 6.2;
+  speedLineUniforms.lengthScale.value = 500;
+
+  speedLineUniforms.speedLineAnimation.value = 7.8;
+  speedLineUniforms.speedLinePower.value = 0.9;
+  
+  speedLineUniforms.maskScale.value = 2.0;
+  speedLineUniforms.maskHardness.value = 0.3;
+  speedLineUniforms.maskPower.value = 2.1;
+  
+  speedLineUniforms.speedLineMap.value = 0.62;
+
+  
+}
+
+export function SetHyperspeed()
+{
+  speedLineUniforms.radialScale.value = 0.0;
+  speedLineUniforms.lengthScale.value = 500;
+
+  speedLineUniforms.speedLineAnimation.value = 12.7;
+  speedLineUniforms.speedLinePower.value = 1.5;
+  
+  speedLineUniforms.maskScale.value = 2.0;
+  speedLineUniforms.maskHardness.value = 1.4;
+  speedLineUniforms.maskPower.value = 4.1;
+  
+  speedLineUniforms.speedLineMap.value = 0.51;
+
+}export function SetBlackHoleValue()
+{
+  speedLineUniforms.radialScale.value = 8.7;
+  speedLineUniforms.lengthScale.value = 0;
+
+  speedLineUniforms.speedLineAnimation.value = 4.1;
+  speedLineUniforms.speedLinePower.value = 1.0;
+  
+  speedLineUniforms.maskScale.value = 3.0;
+  speedLineUniforms.maskHardness.value = 1.2;
+  speedLineUniforms.maskPower.value = 5.0;
+  
+  speedLineUniforms.speedLineMap.value = 0.4;
+
 }

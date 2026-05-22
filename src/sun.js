@@ -5,6 +5,10 @@ import fragmentShader from '../shaders/sun/sun.frag?raw';
 
 export const SunUniforms = {
     time: { value: 0 },
+    startTime: { value: 0 },
+    startChange:{value:false},
+    change:{value:false},
+    duration:{value:10.0},
 
     tScene: { value: null },
 

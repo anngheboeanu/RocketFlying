@@ -9,6 +9,12 @@ export const starMaterialUniforms = {
             halfBoxDepth: { value:100 },
             centerPoint: {value: new THREE.Vector3(0,0,-400)},
             time:   {value: 0.0},
+            
+            startTime: { value: 0 },
+            startChange:{value:false},
+            change:{value:false},
+            duration:{value:10.0},
+            
             speed:{value:.1},
             tScene: { value: null },
             streakCount:{value:1},

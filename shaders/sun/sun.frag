@@ -1,7 +1,7 @@
 uniform float time;
 
 #define SURF_DIST 0.001
-#define MAX_STEPS 50
+#define MAX_STEPS 100
 #define MAX_DIST 10000.0
 #define SURFACE_DIST 0.0001
 #define PI 3.14159265359
@@ -10,10 +10,27 @@ uniform vec2 resolution;
 float sunRadius = 10.0;
 vec3 sunPos;
 
-vec3 sunColor = vec3(0.9804, 0.5961, 0.0902);
-vec3 inbetweenColor = vec3(1.0, 0.3333, 0.0);
-vec3 darkSpotColor = vec3(0.8941, 0.5529, 0.1412);
-vec3 innerShine = vec3(1.0, 0.9176, 0.0);
+// vec3 sunColor = vec3(0.9804, 0.5961, 0.0902);
+// vec3 inbetweenColor = vec3(1.0, 0.3333, 0.0);
+// vec3 darkSpotColor = vec3(0.8941, 0.5529, 0.1412);
+// vec3 innerShine = vec3(1.0, 0.9176, 0.0);
+
+vec3 normalSunColor = vec3(0.9804, 0.5961, 0.0902);
+vec3 normalSunInbetweenColor = vec3(1.0, 0.0, 0.251);
+vec3 normalSunDarkSpotColor = vec3(0.8941, 0.5529, 0.1412);
+vec3 normalSunInnerShine = vec3(1.0, 0.9176, 0.0);
+
+vec3 blackHole = vec3(1.0);
+vec3 blackInbetweenColor = vec3(1.0);
+vec3 blackDarkSpotColor = vec3(0.0);
+vec3 blackInnerShine = vec3(1.0);
+
+float noiseFreq = 4.0;
+uniform float duration;
+
+uniform float startTime;
+uniform bool startChange;
+uniform bool change;
 
 float hash(vec3 p) {
     p = fract(p * 0.3183099 + vec3(.1, .2, .3));
@@ -31,19 +48,53 @@ float noise(vec3 x) {
 
     return n;
 }
+float smin(float a, float b, float k) {
+    float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+    return mix(b, a, h) - k * h * (1.0 - h);
+}
 
 float sdfSphere(vec3 point, float radius) {
     return length(point) - radius;
 }
+float getProgress() {
+    if(!startChange)
+        return 0.0;
+    float t = clamp((time - startTime) / duration, 0.0, 1.0);
+
+    if(!change) {
+        return 1.0 - t;
+    } else {
+        return t;
+    }
+}
 
 float scene(vec3 point) {
-
     vec3 pt = point - sunPos;
 
     float sphere = sdfSphere(pt, sunRadius);
-    float n = noise(pt * 5.0 + time * 0.002);
-    sphere += n * 0.1;
-    return sphere;
+
+    float t = getProgress();
+    float realFreq = mix(noiseFreq, 0.0, t);
+    float n = noise(pt * realFreq + time * 2.0);
+    sphere += n * 0.21;
+
+    float innerRadius = sunRadius * .4 * getProgress();
+    float outerRadius = sunRadius * 1.2 * getProgress();
+    float thickness = 0.001;
+
+    pt.x /= 2.0;
+
+    vec2 p = pt.xz;
+    float distToCenterXZ = length(p) - .1;
+    float disk = max(distToCenterXZ - outerRadius, innerRadius - distToCenterXZ);
+
+    disk = max(disk, abs(pt.y) - thickness);
+    disk = disk + 1.0 * (1.0 - getProgress());
+
+    float stripes = sin(2.0);
+    disk += stripes * 0.01;
+
+    return smin(sphere, disk, 1.0);
 }
 
 float glow = 0.0;
@@ -80,6 +131,14 @@ uniform vec3 up;
 uniform sampler2D tScene;
 
 vec3 GetSunColor(vec3 currentCol) {
+
+    float t = getProgress();
+
+    vec3 darkSpotColor = mix(normalSunDarkSpotColor, blackDarkSpotColor, t);
+    vec3 inbetweenColor = mix(normalSunInbetweenColor, blackInbetweenColor, t);
+    vec3 innerShine = mix(normalSunInnerShine, blackInnerShine, t);
+    vec3 sunColor = mix(normalSunColor, blackHole, t);
+
     vec2 uv = gl_FragCoord.xy / resolution.xy;
     uv -= 0.5;
     uv.x *= resolution.x / resolution.y;
@@ -89,7 +148,7 @@ vec3 GetSunColor(vec3 currentCol) {
 
     vec3 rayOrigin = vec3(0.0, 0.0, 0.0);
     vec3 rayDirection = normalize(uv.x * right + uv.y * up + forward);
-    sunPos = vec3(0.0, 0.0, 25.0);
+    sunPos = vec3(0.0, 5.0, 30.0);
 
     float d = raymarch(rayOrigin, rayDirection);
     vec3 p = rayOrigin + rayDirection * d;
@@ -114,7 +173,7 @@ vec3 GetSunColor(vec3 currentCol) {
         color += innerShine * innerShineExp * 0.9;
 
         //adding a rim light in similar manner just now we want it where the normal is perpendicular to camera -> edge
-        float rim = 1.0 - max(dot(normal, -rayDirection), 0.0); // rim is one when dod is perpendicular
+        float rim = 1.0 - max(dot(normal, -rayDirection), 0.0); // rim is one when dot is perpendicular
         rim = pow(rim, 7.);
         color += innerShine * rim * 5.0;
 
